@@ -1,0 +1,1125 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Generador de Recetas</title>
+    <link rel="icon" href="/static/libro-de-recetas.png" type="image/x-icon" />
+    <style>
+      @import url("https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=Source+Sans+3:wght@300;400;500;600&display=swap");
+
+      :root {
+        --color-bg: #f8f6f1;
+        --color-surface: #ffffff;
+        --color-primary: #2c4a3e;
+        --color-primary-light: #3d6b5e;
+        --color-accent: #c17f3a;
+        --color-text: #1a1a1a;
+        --color-text-muted: #6b6b6b;
+        --color-border: #e0dbd0;
+        --color-error: #9b2335;
+        --radius: 6px;
+        --shadow: 0 2px 16px rgba(44, 74, 62, 0.08);
+        --transition: 0.25s ease;
+      }
+
+      * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+
+      body {
+        font-family: "Source Sans 3", sans-serif;
+        background: var(--color-bg);
+        color: var(--color-text);
+        min-height: 100vh;
+      }
+
+      header {
+        background: var(--color-primary);
+        padding: 0 2rem;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        height: 60px;
+        position: sticky;
+        top: 0;
+        z-index: 100;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+      }
+
+      .logo {
+        font-family: "Playfair Display", serif;
+        color: #fff;
+        font-size: 1.25rem;
+        font-weight: 700;
+        letter-spacing: 0.02em;
+      }
+
+      .logo span {
+        color: var(--color-accent);
+      }
+
+      #nav-auth {
+        display: flex;
+        gap: 0.75rem;
+        align-items: center;
+      }
+
+      .btn {
+        font-family: "Source Sans 3", sans-serif;
+        font-size: 0.875rem;
+        font-weight: 500;
+        padding: 0.5rem 1.25rem;
+        border-radius: var(--radius);
+        border: none;
+        cursor: pointer;
+        transition:
+          background var(--transition),
+          transform var(--transition),
+          opacity var(--transition);
+        letter-spacing: 0.02em;
+      }
+
+      .btn:hover {
+        transform: translateY(-1px);
+      }
+      .btn:active {
+        transform: translateY(0);
+      }
+
+      .btn-primary {
+        background: var(--color-accent);
+        color: #fff;
+      }
+      .btn-primary:hover {
+        background: #a86d2f;
+      }
+
+      .btn-outline {
+        background: transparent;
+        color: #fff;
+        border: 1px solid rgba(255, 255, 255, 0.5);
+      }
+      .btn-outline:hover {
+        background: rgba(255, 255, 255, 0.1);
+      }
+
+      .btn-secondary {
+        background: var(--color-primary);
+        color: #fff;
+      }
+      .btn-secondary:hover {
+        background: var(--color-primary-light);
+      }
+
+      .btn-danger {
+        background: var(--color-error);
+        color: #fff;
+        font-size: 0.8rem;
+        padding: 0.4rem 0.9rem;
+      }
+      .btn-danger:hover {
+        background: #7d1c2a;
+      }
+
+      .btn-sm {
+        font-size: 0.8rem;
+        padding: 0.4rem 0.9rem;
+      }
+
+      .btn:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+        transform: none;
+      }
+
+      main {
+        max-width: 1000px;
+        margin: 0 auto;
+        padding: 2rem 1.5rem;
+      }
+
+      .view {
+        display: none;
+        animation: fadeIn 0.3s ease;
+      }
+      .view.active {
+        display: block;
+      }
+
+      @keyframes fadeIn {
+        from {
+          opacity: 0;
+          transform: translateY(8px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+
+      @keyframes slideIn {
+        from {
+          opacity: 0;
+          transform: translateX(-12px);
+        }
+        to {
+          opacity: 1;
+          transform: translateX(0);
+        }
+      }
+
+      @keyframes spin {
+        to {
+          transform: rotate(360deg);
+        }
+      }
+
+      .hero {
+        text-align: center;
+        padding: 4rem 1rem;
+      }
+
+      .hero h1 {
+        font-family: "Playfair Display", serif;
+        font-size: 2.5rem;
+        font-weight: 700;
+        color: var(--color-primary);
+        margin-bottom: 1rem;
+        line-height: 1.2;
+      }
+
+      .hero p {
+        color: var(--color-text-muted);
+        font-size: 1.1rem;
+        font-weight: 300;
+        max-width: 520px;
+        margin: 0 auto 2rem;
+        line-height: 1.6;
+      }
+
+      .hero-actions {
+        display: flex;
+        gap: 1rem;
+        justify-content: center;
+      }
+
+      .card {
+        background: var(--color-surface);
+        border: 1px solid var(--color-border);
+        border-radius: var(--radius);
+        padding: 2rem;
+        box-shadow: var(--shadow);
+        margin-bottom: 1.5rem;
+      }
+
+      .card h2 {
+        font-family: "Playfair Display", serif;
+        font-size: 1.4rem;
+        color: var(--color-primary);
+        margin-bottom: 1.5rem;
+        padding-bottom: 0.75rem;
+        border-bottom: 2px solid var(--color-border);
+      }
+
+      .form-row {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 1rem;
+      }
+
+      .form-group {
+        margin-bottom: 1.25rem;
+      }
+
+      .form-group label {
+        display: block;
+        font-size: 0.875rem;
+        font-weight: 500;
+        color: var(--color-text-muted);
+        margin-bottom: 0.4rem;
+        letter-spacing: 0.03em;
+        text-transform: uppercase;
+      }
+
+      .form-group input,
+      .form-group select {
+        width: 100%;
+        padding: 0.625rem 0.875rem;
+        border: 1px solid var(--color-border);
+        border-radius: var(--radius);
+        font-family: "Source Sans 3", sans-serif;
+        font-size: 0.95rem;
+        color: var(--color-text);
+        background: var(--color-bg);
+        transition:
+          border-color var(--transition),
+          box-shadow var(--transition);
+      }
+
+      .form-group input:focus,
+      .form-group select:focus {
+        outline: none;
+        border-color: var(--color-primary);
+        box-shadow: 0 0 0 3px rgba(44, 74, 62, 0.1);
+      }
+
+      .alert {
+        padding: 0.75rem 1rem;
+        border-radius: var(--radius);
+        font-size: 0.9rem;
+        margin-bottom: 1rem;
+        animation: fadeIn 0.2s ease;
+      }
+
+      .alert-error {
+        background: #fdf0f0;
+        border: 1px solid #f5c6cb;
+        color: var(--color-error);
+      }
+      .alert-success {
+        background: #f0faf4;
+        border: 1px solid #b7e4c7;
+        color: #1a5c35;
+      }
+
+      .section-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 1.5rem;
+      }
+
+      .section-header h2 {
+        font-family: "Playfair Display", serif;
+        font-size: 1.5rem;
+        color: var(--color-primary);
+      }
+
+      .ingrediente-item {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 0.75rem 1rem;
+        border: 1px solid var(--color-border);
+        border-radius: var(--radius);
+        margin-bottom: 0.5rem;
+        background: var(--color-surface);
+        animation: slideIn 0.2s ease;
+        transition: box-shadow var(--transition);
+      }
+
+      .ingrediente-item:hover {
+        box-shadow: var(--shadow);
+      }
+
+      .ingrediente-info {
+        font-size: 0.95rem;
+      }
+      .ingrediente-nombre {
+        font-weight: 600;
+        color: var(--color-primary);
+      }
+      .ingrediente-cantidad {
+        color: var(--color-text-muted);
+        font-size: 0.875rem;
+        margin-top: 0.1rem;
+      }
+
+      .receta-card {
+        background: var(--color-surface);
+        border: 1px solid var(--color-border);
+        border-radius: var(--radius);
+        padding: 1.5rem;
+        margin-bottom: 1rem;
+        box-shadow: var(--shadow);
+        animation: slideIn 0.25s ease;
+        transition:
+          transform var(--transition),
+          box-shadow var(--transition);
+      }
+
+      .receta-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 24px rgba(44, 74, 62, 0.12);
+      }
+
+      .receta-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        margin-bottom: 0.75rem;
+      }
+
+      .receta-nombre {
+        font-family: "Playfair Display", serif;
+        font-size: 1.15rem;
+        color: var(--color-primary);
+        font-weight: 600;
+      }
+
+      .receta-meta {
+        display: flex;
+        gap: 0.75rem;
+        margin-top: 0.5rem;
+      }
+
+      .badge {
+        font-size: 0.75rem;
+        padding: 0.2rem 0.6rem;
+        border-radius: 20px;
+        font-weight: 500;
+      }
+
+      .badge-time {
+        background: #eef4ff;
+        color: #2c5282;
+      }
+      .badge-level {
+        background: #fff8ee;
+        color: #7d4a00;
+      }
+
+      .stars {
+        display: flex;
+        gap: 0.2rem;
+        margin: 0.75rem 0;
+      }
+
+      .star {
+        font-size: 1.2rem;
+        cursor: pointer;
+        color: #d4b896;
+        transition:
+          color var(--transition),
+          transform var(--transition);
+      }
+
+      .star:hover,
+      .star.active {
+        color: var(--color-accent);
+        transform: scale(1.2);
+      }
+
+      .receta-actions {
+        display: flex;
+        gap: 0.5rem;
+        margin-top: 1rem;
+        align-items: center;
+      }
+
+      .receta-detail {
+        display: none;
+        margin-top: 1rem;
+        border-top: 1px solid var(--color-border);
+        padding-top: 1rem;
+      }
+      .receta-detail.open {
+        display: block;
+        animation: fadeIn 0.2s ease;
+      }
+
+      .receta-detail h4 {
+        font-size: 0.8rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        color: var(--color-text-muted);
+        margin-bottom: 0.5rem;
+      }
+
+      .receta-detail ul {
+        list-style: none;
+        margin-bottom: 1rem;
+      }
+      .receta-detail ul li {
+        padding: 0.25rem 0;
+        font-size: 0.9rem;
+        color: var(--color-text);
+        border-bottom: 1px dashed var(--color-border);
+      }
+      .receta-detail ul li:last-child {
+        border: none;
+      }
+
+      .receta-detail ol {
+        padding-left: 1.25rem;
+        margin-bottom: 1rem;
+      }
+      .receta-detail ol li {
+        padding: 0.3rem 0;
+        font-size: 0.9rem;
+        line-height: 1.5;
+      }
+
+      .empty-state {
+        text-align: center;
+        padding: 3rem 1rem;
+        color: var(--color-text-muted);
+      }
+
+      .empty-state p {
+        font-size: 1rem;
+        margin-top: 0.5rem;
+      }
+
+      .spinner {
+        display: inline-block;
+        width: 18px;
+        height: 18px;
+        border: 2px solid rgba(255, 255, 255, 0.4);
+        border-top-color: #fff;
+        border-radius: 50%;
+        animation: spin 0.7s linear infinite;
+        vertical-align: middle;
+        margin-right: 0.5rem;
+      }
+
+      .loading-overlay {
+        display: none;
+        position: fixed;
+        inset: 0;
+        background: rgba(248, 246, 241, 0.8);
+        backdrop-filter: blur(4px);
+        z-index: 200;
+        align-items: center;
+        justify-content: center;
+        flex-direction: column;
+        gap: 1rem;
+      }
+
+      .loading-overlay.visible {
+        display: flex;
+      }
+
+      .loading-text {
+        font-family: "Playfair Display", serif;
+        font-size: 1.1rem;
+        color: var(--color-primary);
+      }
+
+      .loading-ring {
+        width: 48px;
+        height: 48px;
+        border: 3px solid var(--color-border);
+        border-top-color: var(--color-primary);
+        border-radius: 50%;
+        animation: spin 0.8s linear infinite;
+      }
+
+      .tabs {
+        display: flex;
+        gap: 0;
+        border-bottom: 2px solid var(--color-border);
+        margin-bottom: 1.5rem;
+      }
+
+      .tab {
+        padding: 0.75rem 1.5rem;
+        font-size: 0.9rem;
+        font-weight: 500;
+        color: var(--color-text-muted);
+        cursor: pointer;
+        border-bottom: 2px solid transparent;
+        margin-bottom: -2px;
+        transition:
+          color var(--transition),
+          border-color var(--transition);
+      }
+
+      .tab.active {
+        color: var(--color-primary);
+        border-bottom-color: var(--color-primary);
+        font-weight: 600;
+      }
+
+      .tab-content {
+        display: none;
+      }
+      .tab-content.active {
+        display: block;
+        animation: fadeIn 0.2s ease;
+      }
+
+      #user-name {
+        color: rgba(255, 255, 255, 0.85);
+        font-size: 0.875rem;
+        margin-right: 0.5rem;
+      }
+
+      @media (max-width: 600px) {
+        .form-row {
+          grid-template-columns: 1fr;
+        }
+        .hero h1 {
+          font-size: 1.75rem;
+        }
+        .hero-actions {
+          flex-direction: column;
+          align-items: center;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="loading-overlay" id="loading-overlay">
+      <div class="loading-ring"></div>
+      <p class="loading-text">
+        Generando receta con inteligencia artificial...
+      </p>
+    </div>
+
+    <header>
+      <div class="logo">Recetas<span>IA</span></div>
+      <div id="nav-auth">
+        <span id="user-name" style="display: none"></span>
+        <button
+          class="btn btn-outline"
+          id="btn-show-login"
+          onclick="showView('login')"
+        >
+          Iniciar sesion
+        </button>
+        <button
+          class="btn btn-primary"
+          id="btn-show-register"
+          onclick="showView('register')"
+        >
+          Registrarse
+        </button>
+        <button
+          class="btn btn-outline"
+          id="btn-logout"
+          style="display: none"
+          onclick="logout()"
+        >
+          Cerrar sesion
+        </button>
+      </div>
+    </header>
+
+    <main>
+      <div class="view active" id="view-home">
+        <div class="hero">
+          <h1>Convierte tu inventario<br />en una receta</h1>
+          <p>
+            Registra los ingredientes que tienes en casa y obtiene recetas
+            personalizadas generadas por inteligencia artificial.
+          </p>
+          <div class="hero-actions">
+            <button class="btn btn-primary" onclick="showView('register')">
+              Comenzar ahora
+            </button>
+            <button class="btn btn-secondary" onclick="showView('login')">
+              Ya tengo cuenta
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <div class="view" id="view-login">
+        <div class="card" style="max-width: 420px; margin: 2rem auto">
+          <h2>Iniciar sesion</h2>
+          <div id="login-alert"></div>
+          <div class="form-group">
+            <label>Correo electronico</label>
+            <input
+              type="email"
+              id="login-email"
+              placeholder="correo@ejemplo.com"
+            />
+          </div>
+          <div class="form-group">
+            <label>Contrasena</label>
+            <input
+              type="password"
+              id="login-password"
+              placeholder="Tu contrasena"
+            />
+          </div>
+          <button class="btn btn-primary" onclick="login()" id="btn-login">
+            Ingresar
+          </button>
+          <p
+            style="
+              margin-top: 1rem;
+              font-size: 0.875rem;
+              color: var(--color-text-muted);
+            "
+          >
+            No tienes cuenta?
+            <a
+              href="#"
+              onclick="showView('register')"
+              style="color: var(--color-primary); font-weight: 600"
+              >Registrate</a
+            >
+          </p>
+        </div>
+      </div>
+
+      <div class="view" id="view-register">
+        <div class="card" style="max-width: 420px; margin: 2rem auto">
+          <h2>Crear cuenta</h2>
+          <div id="register-alert"></div>
+          <div class="form-group">
+            <label>Nombre completo</label>
+            <input type="text" id="reg-nombre" placeholder="Tu nombre" />
+          </div>
+          <div class="form-group">
+            <label>Correo electronico</label>
+            <input
+              type="email"
+              id="reg-email"
+              placeholder="correo@ejemplo.com"
+            />
+          </div>
+          <div class="form-group">
+            <label>Contrasena</label>
+            <input
+              type="password"
+              id="reg-password"
+              placeholder="Minimo 6 caracteres"
+            />
+          </div>
+          <button class="btn btn-primary" onclick="register()">
+            Crear cuenta
+          </button>
+          <p
+            style="
+              margin-top: 1rem;
+              font-size: 0.875rem;
+              color: var(--color-text-muted);
+            "
+          >
+            Ya tienes cuenta?
+            <a
+              href="#"
+              onclick="showView('login')"
+              style="color: var(--color-primary); font-weight: 600"
+              >Inicia sesion</a
+            >
+          </p>
+        </div>
+      </div>
+
+      <div class="view" id="view-app">
+        <div class="tabs">
+          <div class="tab active" onclick="switchTab('inventario')">
+            Inventario
+          </div>
+          <div class="tab" onclick="switchTab('recetas')">Mis Recetas</div>
+        </div>
+
+        <div class="tab-content active" id="tab-inventario">
+          <div class="section-header">
+            <h2>Inventario de ingredientes</h2>
+            <button class="btn btn-primary btn-sm" onclick="toggleAddForm()">
+              Agregar ingrediente
+            </button>
+          </div>
+
+          <div class="card" id="add-form" style="display: none">
+            <h2>Nuevo ingrediente</h2>
+            <div id="ingr-alert"></div>
+            <div class="form-row">
+              <div class="form-group">
+                <label>Nombre</label>
+                <input type="text" id="ingr-nombre" placeholder="Ej: Tomate" />
+              </div>
+              <div class="form-group">
+                <label>Cantidad</label>
+                <input type="text" id="ingr-cantidad" placeholder="Ej: 3" />
+              </div>
+            </div>
+            <div class="form-group" style="max-width: 200px">
+              <label>Unidad</label>
+              <select id="ingr-unidad">
+                <option value="unidades">Unidades</option>
+                <option value="gramos">Gramos</option>
+                <option value="kg">Kilogramos</option>
+                <option value="ml">Mililitros</option>
+                <option value="litros">Litros</option>
+                <option value="tazas">Tazas</option>
+                <option value="cucharadas">Cucharadas</option>
+                <option value="cucharaditas">Cucharaditas</option>
+              </select>
+            </div>
+            <div style="display: flex; gap: 0.75rem">
+              <button class="btn btn-primary btn-sm" onclick="addIngrediente()">
+                Guardar
+              </button>
+              <button
+                class="btn btn-sm"
+                style="
+                  background: var(--color-border);
+                  color: var(--color-text);
+                "
+                onclick="toggleAddForm()"
+              >
+                Cancelar
+              </button>
+            </div>
+          </div>
+
+          <div id="ingredientes-list"></div>
+
+          <div
+            style="
+              margin-top: 1.5rem;
+              padding-top: 1.5rem;
+              border-top: 1px solid var(--color-border);
+            "
+          >
+            <button
+              class="btn btn-secondary"
+              onclick="generarReceta()"
+              id="btn-generar"
+            >
+              Generar receta con mi inventario
+            </button>
+          </div>
+        </div>
+
+        <div class="tab-content" id="tab-recetas">
+          <div class="section-header">
+            <h2>Recetas generadas</h2>
+            <span
+              id="recetas-count"
+              style="font-size: 0.875rem; color: var(--color-text-muted)"
+            ></span>
+          </div>
+          <div id="recetas-list"></div>
+        </div>
+      </div>
+    </main>
+
+    <script>
+      let token = localStorage.getItem("token") || null;
+      let userName = localStorage.getItem("userName") || "";
+      let editingId = null;
+      function api(path, options = {}) {
+        const headers = { "Content-Type": "application/json" };
+        if (token) headers["Authorization"] = "Bearer " + token;
+        return fetch(path, { headers, ...options });
+      }
+
+      function showView(name) {
+        document
+          .querySelectorAll(".view")
+          .forEach((v) => v.classList.remove("active"));
+        document.getElementById("view-" + name).classList.add("active");
+      }
+
+      function showAlert(id, msg, type = "error") {
+        const el = document.getElementById(id);
+        if (el) el.innerHTML = `<div class="alert alert-${type}">${msg}</div>`;
+      }
+
+      function clearAlert(id) {
+        const el = document.getElementById(id);
+        if (el) el.innerHTML = "";
+      }
+
+      function setLoggedIn(name) {
+        token = localStorage.getItem("token");
+        userName = name;
+        document.getElementById("btn-show-login").style.display = "none";
+        document.getElementById("btn-show-register").style.display = "none";
+        document.getElementById("btn-logout").style.display = "";
+        const un = document.getElementById("user-name");
+        un.style.display = "";
+        un.textContent = "Hola, " + name;
+        showView("app");
+        loadIngredientes();
+        loadRecetas();
+      }
+
+      function logout() {
+        token = null;
+        localStorage.removeItem("token");
+        localStorage.removeItem("userName");
+        document.getElementById("btn-show-login").style.display = "";
+        document.getElementById("btn-show-register").style.display = "";
+        document.getElementById("btn-logout").style.display = "none";
+        document.getElementById("user-name").style.display = "none";
+        showView("home");
+      }
+
+      async function login() {
+        clearAlert("login-alert");
+        const email = document.getElementById("login-email").value.trim();
+        const password = document.getElementById("login-password").value;
+        if (!email || !password)
+          return showAlert("login-alert", "Completa todos los campos.");
+        const body = new URLSearchParams({ username: email, password });
+        const res = await fetch("/auth/login", {
+          method: "POST",
+          body,
+          headers: { "Content-Type": "application/x-www-form-urlencoded" },
+        });
+        const data = await res.json();
+        if (!res.ok)
+          return showAlert(
+            "login-alert",
+            data.detail || "Error al iniciar sesion.",
+          );
+        localStorage.setItem("token", data.access_token);
+        const me = await api("/auth/me").catch(() => null);
+        const name = email.split("@")[0];
+        localStorage.setItem("userName", name);
+        setLoggedIn(name);
+      }
+
+      async function register() {
+        clearAlert("register-alert");
+        const nombre = document.getElementById("reg-nombre").value.trim();
+        const email = document.getElementById("reg-email").value.trim();
+        const password = document.getElementById("reg-password").value;
+        if (!nombre || !email || !password)
+          return showAlert("register-alert", "Completa todos los campos.");
+        if (password.length < 6)
+          return showAlert(
+            "register-alert",
+            "La contrasena debe tener al menos 6 caracteres.",
+          );
+        const res = await api("/auth/registro", {
+          method: "POST",
+          body: JSON.stringify({ nombre, email, password }),
+        });
+        const data = await res.json();
+        if (!res.ok)
+          return showAlert(
+            "register-alert",
+            data.detail || "Error al registrarse.",
+          );
+        showAlert(
+          "register-alert",
+          "Cuenta creada. Iniciando sesion...",
+          "success",
+        );
+        document.getElementById("login-email").value = email;
+        document.getElementById("login-password").value = password;
+        await new Promise((r) => setTimeout(r, 800));
+        await login();
+      }
+
+      function toggleAddForm() {
+        const f = document.getElementById("add-form");
+        f.style.display = f.style.display === "none" ? "block" : "none";
+      }
+
+      async function loadIngredientes() {
+        const res = await api("/ingredientes");
+        if (!res.ok) return;
+        const data = await res.json();
+        const list = document.getElementById("ingredientes-list");
+        if (!data.length) {
+          list.innerHTML =
+            '<div class="empty-state"><p>No tienes ingredientes registrados.<br>Agrega ingredientes para poder generar recetas.</p></div>';
+          return;
+        }
+        list.innerHTML = data
+          .map(
+            (i) => `
+            <div class="ingrediente-item" id="ingr-${i.id}">
+                <div class="ingrediente-info">
+                    <div class="ingrediente-nombre">${i.nombre}</div>
+                    <div class="ingrediente-cantidad">${i.cantidad} ${i.unidad}</div>
+                </div>
+                <div class="ingrediente-acciones" style="display:flex;gap:0.5rem;flex-shrink:0">
+    <button class="btn btn-warning btn-sm" onclick="updateIngrediente(${i.id})">Actualizar</button>
+    <button class="btn btn-danger btn-sm" onclick="deleteIngrediente(${i.id})">Eliminar</button>
+</div>
+            </div>
+        `,
+          )
+          .join("");
+      }
+
+      async function addIngrediente() {
+        clearAlert("ingr-alert");
+        const nombre = document.getElementById("ingr-nombre").value.trim();
+        const cantidad = document.getElementById("ingr-cantidad").value.trim();
+        const unidad = document.getElementById("ingr-unidad").value;
+        if (!nombre || !cantidad)
+          return showAlert("ingr-alert", "Nombre y cantidad son obligatorios.");
+
+        const url = editingId ? "/ingredientes/" + editingId : "/ingredientes";
+        const method = editingId ? "PUT" : "POST";
+
+        const res = await api(url, {
+          method,
+          body: JSON.stringify({ nombre, cantidad, unidad }),
+        });
+        const data = await res.json();
+        if (!res.ok)
+          return showAlert("ingr-alert", data.detail || "Error al guardar.");
+
+        document.getElementById("ingr-nombre").value = "";
+        document.getElementById("ingr-cantidad").value = "";
+        editingId = null;
+        document.querySelector("#add-form h2").textContent =
+          "Nuevo ingrediente";
+        document.querySelector("#add-form .btn-primary").textContent =
+          "Guardar";
+        toggleAddForm();
+        loadIngredientes();
+      }
+
+      async function deleteIngrediente(id) {
+        if (!confirm("Eliminar este ingrediente?")) return;
+        const res = await api("/ingredientes/" + id, { method: "DELETE" });
+        if (res.ok) loadIngredientes();
+      }
+      async function updateIngrediente(id) {
+        const item = document.getElementById("ingr-" + id);
+        const nombre = item.querySelector(".ingrediente-nombre").textContent;
+        const cantidadUnidad = item
+          .querySelector(".ingrediente-cantidad")
+          .textContent.split(" ");
+        const cantidad = cantidadUnidad[0];
+        const unidad = cantidadUnidad[1] || "unidades";
+
+        document.getElementById("ingr-nombre").value = nombre;
+        document.getElementById("ingr-cantidad").value = cantidad;
+        document.getElementById("ingr-unidad").value = unidad;
+
+        editingId = id;
+        document.querySelector("#add-form h2").textContent =
+          "Editar ingrediente";
+        document.querySelector("#add-form .btn-primary").textContent =
+          "Actualizar";
+
+        document.getElementById("add-form").style.display = "block";
+      }
+
+      async function generarReceta() {
+        const overlay = document.getElementById("loading-overlay");
+        overlay.classList.add("visible");
+        const btn = document.getElementById("btn-generar");
+        btn.disabled = true;
+        try {
+          const res = await api("/recetas/generar", { method: "POST" });
+          const data = await res.json();
+          if (!res.ok) {
+            alert(data.detail || "Error al generar receta.");
+            return;
+          }
+          switchTab("recetas");
+          loadRecetas();
+        } finally {
+          overlay.classList.remove("visible");
+          btn.disabled = false;
+        }
+      }
+
+      async function loadRecetas() {
+        const res = await api("/recetas");
+        if (!res.ok) return;
+        const data = await res.json();
+        const count = document.getElementById("recetas-count");
+        count.textContent =
+          data.length + (data.length === 1 ? " receta" : " recetas");
+        const list = document.getElementById("recetas-list");
+        if (!data.length) {
+          list.innerHTML =
+            '<div class="empty-state"><p>Aun no has generado ninguna receta.<br>Ve a tu inventario y presiona "Generar receta".</p></div>';
+          return;
+        }
+        list.innerHTML = data
+          .map((r) => {
+            const ingredientes = JSON.parse(r.ingredientes_json);
+            const pasos = JSON.parse(r.pasos_json);
+            const calificacion = r.calificacion || 0;
+            const bloqueado = calificacion > 0;
+            return `
+      <div class="receta-card" id="receta-${r.id}">
+        <div class="receta-header">
+          <div>
+            <div class="receta-nombre">${r.nombre_plato}</div>
+            <div class="receta-meta">
+              <span class="badge badge-time">${r.tiempo_estimado}</span>
+              <span class="badge badge-level">${r.nivel_dificultad}</span>
+            </div>
+          </div>
+          <button class="btn btn-danger btn-sm" onclick="deleteReceta(${r.id})">Eliminar</button>
+        </div>
+        <div class="stars" id="stars-${r.id}">
+          ${[1, 2, 3, 4, 5]
+            .map(
+              (n) => `
+            <span class="star ${n <= calificacion ? "active" : ""}"
+              ${!bloqueado ? `onclick="calificar(${r.id},${n})"` : ""}
+              style="${bloqueado ? "cursor:default" : "cursor:pointer"}"
+              title="${n} estrellas">&#9733;</span>
+          `,
+            )
+            .join("")}
+        </div>
+        ${!bloqueado ? `<button class="btn btn-sm btn-primary" style="margin-top:0.5rem" onclick="guardarCalificacion(${r.id})">Guardar calificación</button>` : ""}
+        <div class="receta-actions">
+          <button class="btn btn-sm btn-secondary" onclick="toggleDetail(${r.id})">Ver detalle</button>
+        </div>
+        <div class="receta-detail" id="detail-${r.id}">
+          <h4>Ingredientes</h4>
+          <ul>${ingredientes.map((i) => `<li>${i.nombre} - ${i.cantidad} ${i.unidad || ""}</li>`).join("")}</ul>
+          <h4>Preparacion</h4>
+          <ol>${pasos.map((p) => `<li>${p}</li>`).join("")}</ol>
+        </div>
+      </div>`;
+          })
+          .join("");
+      }
+
+      function toggleDetail(id) {
+        const el = document.getElementById("detail-" + id);
+        el.classList.toggle("open");
+        const btn = el.previousElementSibling.querySelector("button");
+        btn.textContent = el.classList.contains("open")
+          ? "Ocultar detalle"
+          : "Ver detalle";
+      }
+
+      let calificacionPendiente = {};
+
+      function calificar(recetaId, estrellas) {
+        calificacionPendiente[recetaId] = estrellas;
+        document
+          .querySelectorAll(`#stars-${recetaId} .star`)
+          .forEach((s, i) => {
+            s.classList.toggle("active", i < estrellas);
+          });
+      }
+
+      async function guardarCalificacion(recetaId) {
+        const estrellas = calificacionPendiente[recetaId];
+        if (!estrellas) return;
+        const res = await api("/recetas/" + recetaId + "/calificar", {
+          method: "POST",
+          body: JSON.stringify({ estrellas }),
+        });
+        if (res.ok) loadRecetas();
+      }
+
+      async function deleteReceta(id) {
+        if (!confirm("Eliminar esta receta del historial?")) return;
+        const res = await api("/recetas/" + id, { method: "DELETE" });
+        if (res.ok) loadRecetas();
+      }
+
+      function switchTab(name) {
+        document.querySelectorAll(".tab").forEach((t, i) => {
+          t.classList.toggle("active", ["inventario", "recetas"][i] === name);
+        });
+        document.querySelectorAll(".tab-content").forEach((c, i) => {
+          c.classList.toggle("active", ["inventario", "recetas"][i] === name);
+        });
+      }
+
+      if (token) setLoggedIn(localStorage.getItem("userName") || "Usuario");
+    </script>
+  </body>
+</html>
